@@ -1,4 +1,4 @@
-import MainImg from "../images/chooseUs/main.png";
+import MainImg from "../images/new/8778026.jpg";
 import Box1 from "../images/chooseUs/icon1.png";
 import Box2 from "../images/chooseUs/icon2.png";
 import Box3 from "../images/chooseUs/icon3.png";

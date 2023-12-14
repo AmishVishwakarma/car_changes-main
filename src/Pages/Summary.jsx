@@ -1,133 +1,151 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
-import axios from "axios";
-import {
-  Box,
-  Typography,
-  useTheme,
-  useMediaQuery,
-  TextField,
-  Button,
-  Alert,
-  Collapse,
-  Card,
-} from "@mui/material";
+import React, { useCallback, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Paper from '@mui/material/Paper';
+import Container from '@mui/material/Container';
+import { Typography } from '@mui/material';
 
-const Summary = () => {
-  const theme = useTheme();
-  const navigate = useNavigate();
-  //media
-  const isNotMobile = useMediaQuery("(min-width: 1000px)");
-  // states
-  const [text, settext] = useState("");
-  const [summary, setSummary] = useState("");
-  const [error, setError] = useState("");
+function App() {
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [textInput, setTextInput] = useState('');
+  const [outputText, setOutputText] = useState('');
 
-  //register ctrl
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const { data } = await axios.post("/api/v1/openai/summary", { text });
-      console.log(data);
-      setSummary(data);
-    } catch (err) {
-      console.log(error);
-      if (err.response.data.error) {
-        setError(err.response.data.error);
-      } else if (err.message) {
-        setError(err.message);
-      }
-      setTimeout(() => {
-        setError("");
-      }, 5000);
-    }
+  const onDrop = useCallback((acceptedFiles) => {
+    // Assuming only one file is allowed to be uploaded at a time
+    const file = acceptedFiles[0];
+    setUploadedFile(file);
+  }, []);
+
+  const { getRootProps, getInputProps } = useDropzone({ onDrop });
+
+  const handleTextInputChange = (event) => {
+    setTextInput(event.target.value);
   };
-  return (
-    <Box
-      width={isNotMobile ? "50%" : "0%"}
-      p={"15rem"}
-      m={"2rem auto"}
-      borderRadius={5}
-      sx={{ boxShadow: 5 }}
-      backgroundColor={theme.palette.background.alt}
-    >
-      <Collapse in={error}>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      </Collapse>
-      <form onSubmit={handleSubmit}>
-        <Typography variant="h3">Summarize Text</Typography>
 
+  const handleDeleteFile = () => {
+    setUploadedFile(null);
+  };
+
+  const handleSubmit = () => {
+    // Handle submission logic here
+    console.log('Uploaded File:', uploadedFile);
+    console.log('Text Input:', textInput);
+
+    // Your processing logic here...
+
+    // For demonstration, just concatenate the inputs
+    const result = `Uploaded File: ${uploadedFile ? uploadedFile.name : 'None'}\nText Input: ${textInput}`;
+    setOutputText(result);
+
+    // Reset state after submission if needed
+    setUploadedFile(null);
+    setTextInput('');
+  };
+
+  return (
+    <Container maxWidth="md" style={containerStyle}>
+      <Paper elevation={3} style={boxStyle}>
+        <h1>Summarizer</h1>
+        
+
+        <div {...getRootProps()} style={dropzoneStyle}>
+          <input {...getInputProps()} />
+          <p>Drag 'n' drop a file here, or click to select a file</p>
+        </div>
+
+        {uploadedFile && (
+          <div style={filePreviewStyle}>
+            <p>Uploaded File: {uploadedFile.name}</p>
+            <Button onClick={handleDeleteFile} style={deleteButtonStyle} variant="contained" color="error">
+              Delete File
+            </Button>
+          </div>
+        )}
+        <Typography variaint="h3" sx={{textAlign:"center", fontWeight: "bold",fontSize:12}}>OR</Typography>
         <TextField
-          placeholder="add your text"
           type="text"
-          multiline={true}
-          required
-          margin="normal"
+          label="Enter text"
+          style={inputStyle}
+          value={textInput}
+          onChange={handleTextInputChange}
           fullWidth
-          value={text}
-          onChange={(e) => {
-            settext(e.target.value);
-          }}
         />
 
-        <Button
-          type="submit"
-          fullWidth
-          variant="contained"
-          size="large"
-          sx={{ color: "white", mt: 2 }}
-        >
+        <Button onClick={handleSubmit} style={submitStyle} variant="contained" color="primary">
           Submit
         </Button>
-        <Typography mt={2}>
-          not this tool ? <Link to="/">GO BACK</Link>
-        </Typography>
-      </form>
 
-      {summary ? (
-        <Card
-          sx={{
-            mt: 4,
-            border: 1,
-            boxShadow: 0,
-            height: "500px",
-            borderRadius: 5,
-            borderColor: "natural.medium",
-            bgcolor: "background.default",
-          }}
-        >
-          <Typography p={2}>{summary}</Typography>
+        <Card style={cardStyle}>
+          <CardContent>
+            <h2>Summary:</h2>
+            <TextField
+                placeholder="Summary will appear here"
+              value={outputText}
+              multiline
+              fullWidth
+              variant="outlined"
+              rows={4}
+              disabled
+            />
+          </CardContent>
         </Card>
-      ) : (
-        <Card
-          sx={{
-            mt: 4,
-            border: 1,
-            boxShadow: 0,
-            height: "500px",
-            borderRadius: 5,
-            borderColor: "natural.medium",
-            bgcolor: "background.default",
-          }}
-        >
-          <Typography
-            variant="h5"
-            color="natural.main"
-            sx={{
-              textAlign: "center",
-              verticalAlign: "middel",
-              lineHeight: "450px",
-            }}
-          >
-            Summary Will Apprea Here
-          </Typography>
-        </Card>
-      )}
-    </Box>
+      </Paper>
+    </Container>
   );
+}
+
+const containerStyle = {
+  marginTop: '0px',
+  display: 'inline',
+  flexDirection: 'column',
+  alignItem: 'center',
+  justifyContent: 'center',
 };
 
-export default Summary;
+const boxStyle = {
+  padding: '150px',
+  margin: 'auto',
+};
+
+const dropzoneStyle = {
+  border: '2px dashed #cccccc',
+  borderRadius: '4px',
+  padding: '30px',
+  textAlign: 'center',
+  cursor: 'pointer',
+  marginBottom: '40px',
+};
+
+const filePreviewStyle = {
+  marginTop: '10px',
+  marginBottom: "20px",
+  sx:{alignItems:"center"}
+  
+};
+
+const inputStyle = {
+  marginTop: '10px',
+  marginBottom: '20px',
+};
+
+const submitStyle = {
+  marginTop: '10px',
+  alignItems:"center",
+  backgroundColor: "#f44",
+};
+
+const deleteButtonStyle = {
+  marginTop: '5px',
+};
+
+const cardStyle = {
+  marginTop: '20px',
+  width: '100%',
+  height: "100%",
+  padding:"20px"
+};
+
+export default App;
